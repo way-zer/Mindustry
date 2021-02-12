@@ -68,6 +68,14 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     public Seq<BuildPlan> lineRequests = new Seq<>();
     public Seq<BuildPlan> selectRequests = new Seq<>();
 
+    public InputHandler(){
+        Events.on(UnitDestroyEvent.class, e -> {
+            if(e.unit != null && e.unit.isPlayer() && e.unit.getPlayer().isLocal() && e.unit.type.weapons.contains(w -> w.bullet.killShooter)){
+                player.shooting = false;
+            }
+        });
+    }
+
     //methods to override
 
     @Remote(called = Loc.server, unreliable = true)
@@ -343,7 +351,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             }
 
             player.clearUnit();
-            player.deathTimer = 61f;
+            player.deathTimer = Player.deathDelay + 1f;
             build.requestSpawn(player);
         }else if(unit == null){ //just clear the unit (is this used?)
             player.clearUnit();
@@ -369,7 +377,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
 
         Fx.spawn.at(player);
         player.clearUnit();
-        player.deathTimer = 61f; //for instant respawn
+        player.deathTimer = Player.deathDelay + 1f; //for instant respawn
     }
 
     @Remote(targets = Loc.both, called = Loc.server, forward = true)

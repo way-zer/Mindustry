@@ -145,6 +145,8 @@ public class Block extends UnlockableContent{
     public boolean conveyorPlacement;
     /** Whether to swap the diagonal placement modes. */
     public boolean swapDiagonalPlacement;
+    /** Build queue priority in schematics. */
+    public int schematicPriority = 0;
     /**
      * The color of this block when displayed on the minimap or map preview.
      * Do not set manually! This is overridden when loading for most blocks.
@@ -425,6 +427,12 @@ public class Block extends UnlockableContent{
     public void drawRequestRegion(BuildPlan req, Eachable<BuildPlan> list){
         TextureRegion reg = getRequestRegion(req, list);
         Draw.rect(reg, req.drawx(), req.drawy(), !rotate ? 0 : req.rotation * 90);
+
+        if(req.worldContext && player != null && teamRegion != null && teamRegion.found()){
+            if(teamRegions[player.team().id] == teamRegion) Draw.color(player.team().color);
+            Draw.rect(teamRegions[player.team().id], req.drawx(), req.drawy());
+            Draw.color();
+        }
 
         drawRequestConfig(req, list);
     }

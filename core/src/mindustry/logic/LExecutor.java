@@ -434,7 +434,7 @@ public class LExecutor{
                     }
                     case build -> {
                         if(unit.canBuild() && exec.obj(p3) instanceof Block block){
-                            int x = World.toTile(x1), y = World.toTile(y1);
+                            int x = World.toTile(x1 - block.offset/tilesize), y = World.toTile(y1 - block.offset/tilesize);
                             int rot = exec.numi(p4);
 
                             //reset state of last request when necessary
@@ -888,6 +888,7 @@ public class LExecutor{
                 String strValue =
                     v.objval == null ? "null" :
                     v.objval instanceof String s ? s :
+                    v.objval == Blocks.stoneWall ? "solid" : //special alias
                     v.objval instanceof MappableContent content ? content.name :
                     v.objval instanceof Content ? "[content]" :
                     v.objval instanceof Building build ? build.block.name :

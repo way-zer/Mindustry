@@ -155,7 +155,7 @@ public class NetServer implements ApplicationListener{
                 if(!extraMods.isEmpty()){
                     result.append("Unnecessary mods:[lightgray]\n").append("> ").append(extraMods.toString("\n> "));
                 }
-                con.kick(result.toString());
+                con.kick(result.toString(), 0);
             }
 
             if(!admins.isWhitelisted(packet.uuid, packet.usid)){
@@ -824,6 +824,7 @@ public class NetServer implements ApplicationListener{
             sent ++;
 
             dataStream.writeInt(entity.pos());
+            dataStream.writeShort(entity.block.id);
             entity.writeAll(Writes.get(dataStream));
 
             if(syncStream.size() > maxSnapshotSize){
@@ -844,13 +845,15 @@ public class NetServer implements ApplicationListener{
 
     public void writeEntitySnapshot(Player player) throws IOException{
         syncStream.reset();
-        Seq<CoreBuild> cores = state.teams.cores(player.team());
+        int sum = state.teams.present.sum(t -> t.cores.size);
 
-        dataStream.writeByte(cores.size);
+        dataStream.writeByte(sum);
 
-        for(CoreBuild entity : cores){
-            dataStream.writeInt(entity.tile.pos());
-            entity.items.write(Writes.get(dataStream));
+        for(TeamData data : state.teams.present){
+            for(CoreBuild entity : data.cores){
+                dataStream.writeInt(entity.tile.pos());
+                entity.items.write(Writes.get(dataStream));
+            }
         }
 
         dataStream.close();

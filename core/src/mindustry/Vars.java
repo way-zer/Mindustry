@@ -50,8 +50,8 @@ public class Vars implements Loadable{
     public static final Charset charset = Charset.forName("UTF-8");
     /** main application name, capitalized */
     public static final String appName = "Mindustry";
-    /** URL for itch.io donations. */
-    public static final String donationURL = "https://anuke.itch.io/mindustry/purchase";
+    /** Github API URL. */
+    public static final String ghApi = "https://api.github.com";
     /** URL for discord invite. */
     public static final String discordURL = "https://discord.gg/mindustry";
     /** URL for sending crash reports to */
@@ -92,8 +92,8 @@ public class Vars implements Loadable{
     public static final float turnDuration = 2 * Time.toMinutes;
     /** chance of an invasion per turn, 1 = 100% */
     public static final float baseInvasionChance = 1f / 100f;
-    /** how many turns have to pass before invasions start */
-    public static final int invasionGracePeriod = 20;
+    /** how many minutes have to pass before invasions in a *captured* sector start */
+    public static final float invasionGracePeriod = 20;
     /** min armor fraction damage; e.g. 0.05 = at least 5% damage */
     public static final float minArmorDamage = 0.1f;
     /** launch animation duration */
@@ -345,7 +345,7 @@ public class Vars implements Loadable{
     }
 
     public static void loadSettings(){
-        settings.setJson(JsonIO.json());
+        settings.setJson(JsonIO.json);
         settings.setAppName(appName);
 
         if(steam || (Version.modifier != null && Version.modifier.contains("steam"))){
