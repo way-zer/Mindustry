@@ -248,7 +248,7 @@ public class Damage{
 
         tmpUnit = null;
 
-        Cons<Unit> cons = e -> {
+        Units.nearbyEnemies(hitter.team, rect, e -> {
             if((tmpUnit != null && e.dst2(x, y) > tmpUnit.dst2(x, y)) || !e.checkTarget(hitter.type.collidesAir, hitter.type.collidesGround)) return;
 
             e.hitbox(hitrect);
@@ -263,9 +263,7 @@ public class Damage{
             if(vec != null){
                 tmpUnit = e;
             }
-        };
-
-        Units.nearbyEnemies(hitter.team, rect, cons);
+        });
 
         if(tmpBuilding != null && tmpUnit != null){
             if(Mathf.dst2(x, y, tmpUnit.getX(), tmpUnit.getY()) <= Mathf.dst2(x, y, tmpBuilding.getX(), tmpBuilding.getY())){
@@ -363,8 +361,7 @@ public class Damage{
 
         if(ground){
             if(!complete){
-                //increase damage slightly to compensate for new algorithm
-                tileDamage(team, World.toTile(x), World.toTile(y), radius / tilesize, damage * 1.1f);
+                tileDamage(team, World.toTile(x), World.toTile(y), radius / tilesize, damage);
             }else{
                 completeDamage(team, x, y, radius, damage);
             }
@@ -380,8 +377,8 @@ public class Damage{
             //why? because otherwise the building would absorb everything in one cell, which means much less damage than a nearby explosion.
             //this needs to be compensated
             if(in != null && in.team != team && in.block.size > 1 && in.health > damage){
-                //deal the damage of an entire side + 1, to be equivalent with maximum 'standard' damage
-                in.damage(damage * (in.block.size + 1));
+                //deal the damage of an entire side, to be equivalent with maximum 'standard' damage
+                in.damage(damage * Math.min((in.block.size), baseRadius * 0.45f));
                 //no need to continue with the explosion
                 return;
             }

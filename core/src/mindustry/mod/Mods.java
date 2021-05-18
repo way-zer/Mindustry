@@ -24,6 +24,7 @@ import mindustry.type.*;
 import mindustry.ui.*;
 
 import java.io.*;
+import java.util.*;
 
 import static mindustry.Vars.*;
 
@@ -92,6 +93,8 @@ public class Mods implements Loadable{
             var loaded = loadMod(dest, true);
             mods.add(loaded);
             requiresReload = true;
+            //enable the mod on import
+            Core.settings.put("mod-" + loaded.name + "-enabled", true);
             sortMods();
             //try to load the mod's icon so it displays on import
             Core.app.post(() -> {
@@ -255,6 +258,11 @@ public class Mods implements Loadable{
 
     public boolean requiresReload(){
         return requiresReload;
+    }
+
+    /** @return whether to skip mod loading due to previous initialization failure. */
+    public boolean skipModLoading(){
+        return failedToLaunch && Core.settings.getBool("modcrashdisable", true);
     }
 
     /** Loads all mods from the folder, but does not call any methods on them.*/
@@ -519,7 +527,7 @@ public class Mods implements Loadable{
             if(mod.root.child("content").exists()){
                 Fi contentRoot = mod.root.child("content");
                 for(ContentType type : ContentType.all){
-                    Fi folder = contentRoot.child(type.name().toLowerCase() + "s");
+                    Fi folder = contentRoot.child(type.name().toLowerCase(Locale.ROOT) + "s");
                     if(folder.exists()){
                         for(Fi file : folder.findAll(f -> f.extension().equals("json") || f.extension().equals("hjson"))){
                             runs.add(new LoadRun(type, file, mod));
@@ -639,8 +647,8 @@ public class Mods implements Loadable{
             ModMeta meta = json.fromJson(ModMeta.class, Jval.read(metaf.readString()).toString(Jformat.plain));
             meta.cleanup();
             String camelized = meta.name.replace(" ", "");
-            String mainClass = meta.main == null ? camelized.toLowerCase() + "." + camelized + "Mod" : meta.main;
-            String baseName = meta.name.toLowerCase().replace(" ", "-");
+            String mainClass = meta.main == null ? camelized.toLowerCase(Locale.ROOT) + "." + camelized + "Mod" : meta.main;
+            String baseName = meta.name.toLowerCase(Locale.ROOT).replace(" ", "-");
 
             var other = mods.find(m -> m.name.equals(baseName));
 
@@ -664,9 +672,10 @@ public class Mods implements Loadable{
                 }
             }
 
+            ClassLoader loader = null;
             Mod mainMod;
-
             Fi mainFile = zip;
+
             if(android){
                 mainFile = mainFile.child("classes.dex");
             }else{
@@ -680,14 +689,20 @@ public class Mods implements Loadable{
 
             //make sure the main class exists before loading it; if it doesn't just don't put it there
             //if the mod is explicitly marked as java, try loading it anyway
-            if((mainFile.exists() || meta.java) &&
-                Core.settings.getBool("mod-" + baseName + "-enabled", true) && Version.isAtLeast(meta.minGameVersion) && (meta.getMinMajor() >= 105 || headless)){
+            if(
+                (mainFile.exists() || meta.java) &&
+                !skipModLoading() &&
+                Core.settings.getBool("mod-" + baseName + "-enabled", true) &&
+                Version.isAtLeast(meta.minGameVersion) &&
+                (meta.getMinMajor() >= 105 || headless)
+            ){
 
                 if(ios){
                     throw new IllegalArgumentException("Java class mods are not supported on iOS.");
                 }
 
-                Class<?> main = platform.loadJar(sourceFile, mainClass);
+                loader = platform.loadJar(sourceFile, mainClass);
+                Class<?> main = Class.forName(mainClass, true, loader);
                 metas.put(main, meta);
                 mainMod = (Mod)main.getDeclaredConstructor().newInstance();
             }else{
@@ -707,11 +722,16 @@ public class Mods implements Loadable{
                 }
             }
 
+            //skip mod loading if it failed
+            if(skipModLoading()){
+                Core.settings.put("mod-" + baseName + "-enabled", false);
+            }
+
             if(!headless){
                 Log.info("Loaded mod '@' in @ms", meta.name, Time.elapsed());
             }
-            return new LoadedMod(sourceFile, zip, mainMod, meta);
 
+            return new LoadedMod(sourceFile, zip, mainMod, loader, meta);
         }catch(Exception e){
             //delete root zip file so it can be closed on windows
             if(rootZip != null) rootZip.delete();
@@ -743,13 +763,16 @@ public class Mods implements Loadable{
         public ModState state = ModState.enabled;
         /** Icon texture. Should be disposed. */
         public @Nullable Texture iconTexture;
+        /** Class loader for JAR mods. Null if the mod isn't loaded or this isn't a jar mod. */
+        public @Nullable ClassLoader loader;
 
-        public LoadedMod(Fi file, Fi root, Mod main, ModMeta meta){
+        public LoadedMod(Fi file, Fi root, Mod main, ClassLoader loader, ModMeta meta){
             this.root = root;
             this.file = file;
+            this.loader = loader;
             this.main = main;
             this.meta = meta;
-            this.name = meta.name.toLowerCase().replace(" ", "-");
+            this.name = meta.name.toLowerCase(Locale.ROOT).replace(" ", "-");
         }
 
         /** @return whether this is a java class mod. */

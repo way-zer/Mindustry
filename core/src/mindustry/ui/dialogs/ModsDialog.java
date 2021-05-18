@@ -48,15 +48,6 @@ public class ModsDialog extends BaseDialog{
         super("@mods");
         addCloseButton();
 
-        Events.on(DisposeEvent.class, e -> {
-            textureCache.each((key, val) -> {
-                if(val.texture.width == val.width){
-                    val.texture.dispose();
-                }
-            });
-            textureCache.clear();
-        });
-
         browser = new BaseDialog("@mods.browser");
 
         browser.cont.table(table -> {
@@ -106,11 +97,6 @@ public class ModsDialog extends BaseDialog{
             }
         });
 
-        shown(() -> Core.app.post(() -> {
-            Core.settings.getBoolOnce("modsalpha", () -> {
-                ui.showText("@mods", "@mods.alphainfo");
-            });
-        }));
     }
 
     void modError(Throwable error){
@@ -283,6 +269,9 @@ public class ModsDialog extends BaseDialog{
                                 }else if(mod.hasContentErrors()){
                                     text.labelWrap("@mod.erroredcontent").growX();
                                     text.row();
+                                }else if(mod.meta.hidden){
+                                    text.labelWrap("@mod.multiplayer.compatible").growX();
+                                    text.row();
                                 }
                             }).top().growX();
 
@@ -309,7 +298,7 @@ public class ModsDialog extends BaseDialog{
 
                             if(steam && !mod.hasSteamID()){
                                 right.row();
-                                right.button(Icon.download, Styles.clearTransi, () -> {
+                                right.button(Icon.export, Styles.clearPartiali, () -> {
                                     platform.publish(mod);
                                 }).size(50f);
                             }

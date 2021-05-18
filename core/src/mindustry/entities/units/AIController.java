@@ -94,7 +94,7 @@ public class AIController implements UnitController{
 
         if(tile == targetTile || (costType == Pathfinder.costNaval && !targetTile.floor().isLiquid)) return;
 
-        unit.moveAt(vec.trns(unit.angleTo(targetTile), unit.speed()));
+        unit.moveAt(vec.trns(unit.angleTo(targetTile.worldx(), targetTile.worldy()), unit.speed()));
     }
 
     protected void updateWeapons(){
@@ -180,7 +180,7 @@ public class AIController implements UnitController{
     }
 
     protected boolean retarget(){
-        return timer.get(timerTarget, 40);
+        return timer.get(timerTarget, target == null ? 40 : 90);
     }
 
     protected Teamc findTarget(float x, float y, float range, boolean air, boolean ground){

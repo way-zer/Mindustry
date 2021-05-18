@@ -24,7 +24,7 @@ import static mindustry.Vars.*;
 public class Reconstructor extends UnitBlock{
     public float constructTime = 60 * 2;
     public Seq<UnitType[]> upgrades = new Seq<>();
-    public int[] capacities;
+    public int[] capacities = {};
 
     public Reconstructor(String name){
         super(name);
@@ -175,7 +175,7 @@ public class Reconstructor extends UnitBlock{
                         //upgrade the unit
                         if(progress >= constructTime){
                             payload.unit = upgrade(payload.unit.type).create(payload.unit.team());
-                            progress = 0;
+                            progress %= 1f;
                             Effect.shake(2f, 3f, this);
                             Fx.producesmoke.at(this);
                             consume();
