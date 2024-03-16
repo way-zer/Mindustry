@@ -23,6 +23,7 @@ ios/libs/
 /tools/build/
 /tests/build/
 /server/build/
+/buildSrc/build/
 changelog
 saves/
 /core/assets-raw/fontgen/out/
@@ -35,7 +36,6 @@ steam_appid.txt
 /android/assets/mindustry-maps/
 /android/assets/mindustry-saves/
 /core/assets/gifexport/
-/annotations/src/main/resources/META-INF/services
 /core/assets/version.properties
 /core/assets/locales
 /core/assets/cache/
@@ -44,7 +44,6 @@ steam_appid.txt
 ios/robovm.properties
 packr-out/
 config/
-buildSrc/
 *.gif
 /tests/out
 

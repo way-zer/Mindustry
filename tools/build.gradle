@@ -119,8 +119,10 @@ task tileImages(){
     }
 }
 
-task pack(dependsOn: [classes, configurations.runtimeClasspath]){
-
+task doPack(){
+    mustRunAfter(classes, configurations.runtimeClasspath)
+    inputs.dir("../core/assets-raw/sprites/")
+    outputs.dir("../core/assets/sprites/")
     doLast{
         //cleanup old sprites
         delete{
@@ -185,6 +187,9 @@ task pack(dependsOn: [classes, configurations.runtimeClasspath]){
             TexturePacker.process(new File(rootDir, "core/assets-raw/sprites_out/").absolutePath, new File(rootDir, "core/assets/sprites/fallback/").absolutePath, "sprites.aatls")
         }
     }
+}
+task pack(){
+    dependsOn(classes, configurations.runtimeClasspath, doPack)
 }
 
 task genSprites(dependsOn: classes, type: JavaExec){

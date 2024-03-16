@@ -7,7 +7,7 @@ buildscript{
     }
 
     dependencies{
-        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath 'com.android.tools.build:gradle:7.4.0'
     }
 }
 
@@ -17,7 +17,7 @@ configurations{ natives }
 
 repositories{
     mavenCentral()
-    maven{ url "https://maven.google.com" }
+    maven{ url "https://dl.google.com/dl/android/maven2/" }
 }
 
 task deploy(type: Copy){
@@ -63,8 +63,8 @@ android{
 
         if(project.hasProperty("release")){
             props['androidBuildCode'] = (vcode + 1).toString()
+            props.store(file('../core/assets/version.properties').newWriter(), null)
         }
-        props.store(file('../core/assets/version.properties').newWriter(), null)
     }
 
     compileOptions{
@@ -147,10 +147,8 @@ task run(type: Exec){
     commandLine "${findSdkDir()}/platform-tools/adb", 'shell', 'am', 'start', '-n', 'io.anuke.mindustry/mindustry.android.AndroidLauncher'
 }
 
-if(!project.ext.hasSprites()){
-    tasks.whenTaskAdded{ task ->
-        if(task.name == 'assembleDebug' || task.name == 'assembleRelease'){
-            task.dependsOn ":tools:pack"
-        }
+tasks.whenTaskAdded{ task ->
+    if(task.name == 'generateDebugAssets' || task.name == 'generateReleaseAssets'){
+        task.dependsOn ":core:allAssets"
     }
 }
